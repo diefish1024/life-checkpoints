@@ -1,0 +1,61 @@
+name: Time Capsule Delivery
+
+on:
+  schedule:
+    - cron: '0 0 1 1 *'
+  workflow_dispatch:
+
+jobs:
+  decrypt_and_email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check and Decrypt
+        id: decrypt
+        env:
+          KEY: ${{ secrets.TIME_CAPSULE_KEY }}
+        run: |
+          CURRENT_YEAR=$(date +'%Y')
+          TARGET_YEAR=$((CURRENT_YEAR - 4))
+          FILE_PATH="${TARGET_YEAR}/letter_to_future.enc"
+          
+          echo "Checking for letter from ${TARGET_YEAR}..."
+          
+          if [ -f "$FILE_PATH" ]; then
+            echo "Found encrypted letter at ${FILE_PATH}. Decrypting..."
+            
+            openssl enc -d -aes-256-cbc -pbkdf2 -in "$FILE_PATH" -out output.md -k "$KEY"
+            
+            if [ $? -eq 0 ]; then
+              echo "✅ Decryption successful."
+              echo "status=found" >> $GITHUB_OUTPUT
+              echo "target_year=${TARGET_YEAR}" >> $GITHUB_OUTPUT
+            else
+              echo "❌ Decryption failed. Check your password."
+              exit 1
+            fi
+          else
+            echo "No letter found for ${TARGET_YEAR}."
+            echo "status=skipped" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Email the Letter
+        if: steps.decrypt.outputs.status == 'found'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "📬 Time Capsule Opened: Letter from ${{ steps.decrypt.outputs.target_year }}"
+          body: file://output.md
+          to: ${{ secrets.MAIL_USERNAME }}
+          from: "Life Checkpoints <${{ secrets.MAIL_USERNAME }}>"
+          secure: true
+
+      - name: Secure Cleanup
+        if: always()
+        run: |
+          rm -f output.md
