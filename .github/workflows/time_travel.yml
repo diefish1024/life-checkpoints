@@ -41,8 +41,6 @@ jobs:
             echo "status=skipped" >> $GITHUB_OUTPUT
           fi
 
-<<<<<<< Updated upstream
-=======
       - name: Convert Markdown to HTML
         if: steps.decrypt.outputs.status == 'found'
         run: |
@@ -63,7 +61,6 @@ jobs:
               f.write(styled_html)
           "
 
->>>>>>> Stashed changes
       - name: Email the Letter
         if: steps.decrypt.outputs.status == 'found'
         uses: dawidd6/action-send-mail@v3
@@ -73,7 +70,9 @@ jobs:
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
           subject: "📬 Time Capsule Opened: Letter from ${{ steps.decrypt.outputs.target_year }}"
-          body: file://output.md
+          
+          html_body: file://email_body.html
+          
           to: ${{ secrets.MAIL_USERNAME }}
           from: "Life Checkpoints <${{ secrets.MAIL_USERNAME }}>"
           secure: true
@@ -81,4 +80,4 @@ jobs:
       - name: Secure Cleanup
         if: always()
         run: |
-          rm -f output.md
+          rm -f output.md email_body.html
