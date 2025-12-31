@@ -41,7 +41,7 @@ Follow these steps on December 31st of each year:
 
 ## ⚙️ How it Works
 
-A GitHub Action runs automatically on January 1st.
+A GitHub Action runs automatically on Dec 31th.
 
 - calculates `Target Year = Current Year - 4`.
 - looks for `letter_to_future.enc` in that year's folder.

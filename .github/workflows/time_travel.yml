@@ -2,7 +2,7 @@ name: Time Capsule Delivery
 
 on:
   schedule:
-    - cron: '0 0 1 1 *'
+    - cron: '59 15 31 12 *'
   workflow_dispatch:
 
 jobs:
